@@ -252,7 +252,7 @@ function App() {
       auftragsnummer: generateAuftragsnummer(),
       erteiltAm: new Date().toISOString().split('T')[0],
       erledigenBis: auftragData.erledigenBis || '',
-      anlage: auftragData.kategorien || '',
+      anlage: auftragData.anlage || '',
       meldetext: auftragData.meldetext || '',
       verantwortlicher: auftragData.verantwortlicher || '',
       ausfuehrender: auftragData.ausfuehrender || '',
