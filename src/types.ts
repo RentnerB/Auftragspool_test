@@ -3,15 +3,18 @@ export interface Auftrag {
   auftragsnummer: string;
   erteiltAm: string;
   erledigenBis: string;
-  anlage: string;
+  kategorie: string;
+  unterkategorie?: string;
   meldetext: string;
   verantwortlicher: string;
   ausfuehrender: string;
   status: 'offen' | 'in_bearbeitung' | 'abgeschlossen' | 'ueberfaellig';
   prioritaet: 'niedrig' | 'normal' | 'hoch' | 'kritisch';
+  abteilung: string;
   ausfuehrungen: Ausfuehrung[];
   gesamtzeit: number; // in Minuten
-  geschaetzteDauer: number; // in Minuten - voraussichtliche Auftragsdauer
+  geschaetzteDauer: number; // in Stunden
+  dateien: AuftragDatei[];
 }
 
 export interface Ausfuehrung {
@@ -23,12 +26,14 @@ export interface Ausfuehrung {
   bearbeiter: string;
 }
 
-export interface Anlage {
+export interface AuftragDatei {
   id: string;
   name: string;
-  beschreibung: string;
-  standort: string;
-  kategoriePfad: string[]; // Hierarchischer Pfad: ['Druckluft', 'Kompressor Station 1', 'Motor']
+  typ: 'bild' | 'dokument';
+  url: string;
+  groesse: number;
+  hochgeladenAm: string;
+  hochgeladenVon: string;
 }
 
 export interface HierarchicalCategory {
@@ -41,9 +46,9 @@ export interface HierarchicalCategory {
 }
 
 export interface AppSettings {
-  anlagen: Anlage[];
   kategorien: HierarchicalCategory[];
   benutzer: string[];
+  abteilungen: string[];
   naechsteAuftragsnummer: number;
   adminPasswort: string;
 }
@@ -53,5 +58,5 @@ export interface UserData {
   settings: AppSettings;
 }
 
-export type SortField = 'auftragsnummer' | 'erteiltAm' | 'erledigenBis' | 'status' | 'prioritaet' | 'anlage';
+export type SortField = 'auftragsnummer' | 'erteiltAm' | 'erledigenBis' | 'status' | 'prioritaet' | 'kategorie' | 'abteilung';
 export type SortDirection = 'asc' | 'desc';

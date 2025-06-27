@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Plus, Clock, Save, Calendar, User, AlertTriangle } from 'lucide-react';
-import { Auftrag, Ausfuehrung } from '../types';
+import { X, Plus, Clock, Save, Calendar, User, AlertTriangle, Upload, FileText, Image, Trash2 } from 'lucide-react';
+import { Auftrag, Ausfuehrung, AuftragDatei, AppSettings } from '../types';
 
 interface AuftragBearbeitenProps {
   auftrag: Auftrag;
@@ -8,9 +8,10 @@ interface AuftragBearbeitenProps {
   onClose: () => void;
   currentUser: string;
   isAdmin: boolean;
+  settings: AppSettings;
 }
 
-export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdmin }: AuftragBearbeitenProps) {
+export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdmin, settings }: AuftragBearbeitenProps) {
   const [beschreibung, setBeschreibung] = useState('');
   const [zeitaufwand, setZeitaufwand] = useState(0);
   const [updatedAuftrag, setUpdatedAuftrag] = useState<Auftrag>(auftrag);
@@ -52,8 +53,49 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
     setUpdatedAuftrag(prev => ({ ...prev, prioritaet: newPriority }));
   };
 
+  const handleAbteilungChange = (newAbteilung: string) => {
+    setUpdatedAuftrag(prev => ({ ...prev, abteilung: newAbteilung }));
+  };
+
   const handleDateChange = (field: 'erledigenBis', value: string) => {
     setUpdatedAuftrag(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleGeschaetzteDauerChange = (value: number) => {
+    setUpdatedAuftrag(prev => ({ ...prev, geschaetzteDauer: value }));
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newFile: AuftragDatei = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          typ: file.type.startsWith('image/') ? 'bild' : 'dokument',
+          url: e.target?.result as string,
+          groesse: file.size,
+          hochgeladenAm: new Date().toISOString(),
+          hochgeladenVon: currentUser
+        };
+
+        setUpdatedAuftrag(prev => ({
+          ...prev,
+          dateien: [...prev.dateien, newFile]
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeFile = (fileId: string) => {
+    setUpdatedAuftrag(prev => ({
+      ...prev,
+      dateien: prev.dateien.filter(f => f.id !== fileId)
+    }));
   };
 
   const handleSave = () => {
@@ -67,6 +109,14 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
     return stunden > 0 ? `${stunden}h ${mins}min` : `${mins}min`;
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   const getPriorityColor = (prioritaet: string) => {
     switch (prioritaet) {
       case 'niedrig': return 'bg-gray-100 text-gray-600 border-gray-200';
@@ -77,9 +127,20 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
     }
   };
 
+  const getAbteilungColor = (abteilung: string) => {
+    const colors = {
+      'Wartung': 'bg-green-100 text-green-700 border-green-200',
+      'Reparatur': 'bg-orange-100 text-orange-700 border-orange-200',
+      'Inspektion': 'bg-blue-100 text-blue-700 border-blue-200',
+      'Notfall': 'bg-red-100 text-red-700 border-red-200',
+      'Modernisierung': 'bg-purple-100 text-purple-700 border-purple-200'
+    };
+    return colors[abteilung as keyof typeof colors] || 'bg-gray-100 text-gray-700 border-gray-200';
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-semibold text-gray-900">Auftrag bearbeiten</h3>
@@ -99,8 +160,11 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
             <h4 className="font-medium text-gray-900 mb-3">Auftragsinformationen</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Anlage:</span>
-                <span className="ml-2 font-medium">{updatedAuftrag.anlage}</span>
+                <span className="text-gray-600">Kategorie:</span>
+                <span className="ml-2 font-medium">{updatedAuftrag.kategorie}</span>
+                {updatedAuftrag.unterkategorie && (
+                  <span className="ml-1 text-gray-500">→ {updatedAuftrag.unterkategorie}</span>
+                )}
               </div>
               <div>
                 <span className="text-gray-600">Erledigen bis:</span>
@@ -130,7 +194,7 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
             </div>
           </div>
 
-          {/* Status und Priorität */}
+          {/* Status, Priorität, Abteilung und Geschätzte Dauer */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white border border-gray-200 rounded-lg p-4">
               <h4 className="font-medium text-gray-900 mb-3">Status</h4>
@@ -174,6 +238,108 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
                 </div>
               </div>
             )}
+          </div>
+
+          {isAdmin && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3">Abteilung</h4>
+                <div className="flex flex-wrap gap-2">
+                  {settings.abteilungen.map(abteilung => (
+                    <button
+                      key={abteilung}
+                      onClick={() => handleAbteilungChange(abteilung)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                        updatedAuftrag.abteilung === abteilung
+                          ? getAbteilungColor(abteilung)
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200'
+                      }`}
+                    >
+                      {abteilung}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3">Geschätzte Dauer</h4>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    value={updatedAuftrag.geschaetzteDauer}
+                    onChange={(e) => handleGeschaetzteDauerChange(parseFloat(e.target.value) || 0)}
+                    className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <span className="text-sm text-gray-600">Stunden</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Dateien */}
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Dateien und Bilder
+            </h4>
+            
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx,.txt"
+                  onChange={handleFileUpload}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Unterstützte Formate: Bilder (JPG, PNG, GIF), Dokumente (PDF, DOC, DOCX, TXT)
+                </p>
+              </div>
+
+              {updatedAuftrag.dateien.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {updatedAuftrag.dateien.map(datei => (
+                    <div key={datei.id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {datei.typ === 'bild' ? (
+                            <Image className="w-4 h-4 text-blue-600" />
+                          ) : (
+                            <FileText className="w-4 h-4 text-green-600" />
+                          )}
+                          <span className="text-sm font-medium text-gray-900 truncate">
+                            {datei.name}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => removeFile(datei.id)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                      
+                      {datei.typ === 'bild' && (
+                        <img
+                          src={datei.url}
+                          alt={datei.name}
+                          className="w-full h-24 object-cover rounded mb-2"
+                        />
+                      )}
+                      
+                      <div className="text-xs text-gray-500">
+                        <div>{formatFileSize(datei.groesse)}</div>
+                        <div>Von: {datei.hochgeladenVon}</div>
+                        <div>{new Date(datei.hochgeladenAm).toLocaleDateString('de-DE')}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Neue Ausführung hinzufügen */}

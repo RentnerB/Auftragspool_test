@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, Download, BarChart3, Settings, ClipboardList, User, AlertTriangle, CheckCircle, Clock, Edit, Shield, ArrowUpDown, ArrowUp, ArrowDown, LogOut } from 'lucide-react';
+import { Search, Plus, Download, BarChart3, Settings, ClipboardList, User, AlertTriangle, CheckCircle, Clock, Edit, Shield, ArrowUpDown, ArrowUp, ArrowDown, LogOut, FileText } from 'lucide-react';
 import { Auftrag, AppSettings, SortField, SortDirection, UserData } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { AuftragBearbeiten } from './components/AuftragBearbeiten';
@@ -7,38 +7,9 @@ import { AdminEinstellungen } from './components/AdminEinstellungen';
 import { AdminLogin } from './components/AdminLogin';
 import { UserLogin } from './components/UserLogin';
 import { exportToExcel } from './utils/excelExport';
+import { generatePDF } from './utils/pdfExport';
 
 const initialSettings: AppSettings = {
-  anlagen: [
-    { 
-      id: '1', 
-      name: 'Kompressor Station 1', 
-      beschreibung: 'Hauptkompressor für Druckluft', 
-      standort: 'Halle A', 
-      kategoriePfad: ['Druckluft', 'Kompressor Station 1'] 
-    },
-    { 
-      id: '2', 
-      name: 'Motor KS1-M1', 
-      beschreibung: 'Antriebsmotor für Kompressor', 
-      standort: 'Halle A', 
-      kategoriePfad: ['Druckluft', 'Kompressor Station 1', 'Motor'] 
-    },
-    { 
-      id: '3', 
-      name: 'Pumpe B-12', 
-      beschreibung: 'Kühlwasserpumpe', 
-      standort: 'Keller', 
-      kategoriePfad: ['Pumpen', 'Kühlwasserpumpen'] 
-    },
-    { 
-      id: '4', 
-      name: 'Heizungsanlage Gebäude A', 
-      beschreibung: 'Zentrale Heizungsanlage', 
-      standort: 'Technikraum', 
-      kategoriePfad: ['Heizung', 'Zentrale Anlagen'] 
-    }
-  ],
   kategorien: [
     {
       id: '1',
@@ -99,6 +70,7 @@ const initialSettings: AppSettings = {
     }
   ],
   benutzer: ['Max Mustermann', 'Anna Weber', 'Klaus Fischer', 'Robert Lang', 'Peter Schmidt', 'Thomas Müller', 'Maria Klein', 'Stefan Gross'],
+  abteilungen: ['Wartung', 'Reparatur', 'Inspektion', 'Notfall', 'Modernisierung'],
   naechsteAuftragsnummer: 5,
   adminPasswort: 'admin123'
 };
@@ -109,13 +81,15 @@ const mockAuftraege: Auftrag[] = [
     auftragsnummer: 'A-2025-001',
     erteiltAm: '2025-01-15',
     erledigenBis: '2025-01-25',
-    anlage: 'Kompressor Station 1',
+    kategorie: 'Druckluft',
+    unterkategorie: 'Kompressor Station 1',
     meldetext: 'Ölstand prüfen und ggf. nachfüllen',
     verantwortlicher: 'Max Mustermann',
     ausfuehrender: 'Peter Schmidt',
     status: 'in_bearbeitung',
     prioritaet: 'normal',
-    geschaetzteDauer: 60,
+    abteilung: 'Wartung',
+    geschaetzteDauer: 1,
     ausfuehrungen: [
       {
         id: '1',
@@ -126,50 +100,59 @@ const mockAuftraege: Auftrag[] = [
         bearbeiter: 'Peter Schmidt'
       }
     ],
-    gesamtzeit: 45
+    gesamtzeit: 45,
+    dateien: []
   },
   {
     id: '2',
     auftragsnummer: 'A-2025-002',
     erteiltAm: '2025-01-10',
     erledigenBis: '2025-01-20',
-    anlage: 'Pumpe B-12',
+    kategorie: 'Pumpen',
+    unterkategorie: 'Kühlwasserpumpen',
     meldetext: 'Dichtung austauschen - Leckage festgestellt',
     verantwortlicher: 'Anna Weber',
     ausfuehrender: 'Thomas Müller',
     status: 'ueberfaellig',
     prioritaet: 'hoch',
-    geschaetzteDauer: 120,
+    abteilung: 'Reparatur',
+    geschaetzteDauer: 2,
     ausfuehrungen: [],
-    gesamtzeit: 0
+    gesamtzeit: 0,
+    dateien: []
   },
   {
     id: '3',
     auftragsnummer: 'A-2025-003',
     erteiltAm: '2025-01-18',
     erledigenBis: '2025-02-01',
-    anlage: 'Heizungsanlage Gebäude A',
+    kategorie: 'Heizung',
+    unterkategorie: 'Zentrale Anlagen',
     meldetext: 'Wartung und Reinigung der Brennkammer',
     verantwortlicher: 'Klaus Fischer',
     ausfuehrender: 'Maria Klein',
     status: 'offen',
     prioritaet: 'normal',
-    geschaetzteDauer: 180,
+    abteilung: 'Wartung',
+    geschaetzteDauer: 3,
     ausfuehrungen: [],
-    gesamtzeit: 0
+    gesamtzeit: 0,
+    dateien: []
   },
   {
     id: '4',
     auftragsnummer: 'A-2025-004',
     erteiltAm: '2025-01-12',
     erledigenBis: '2025-01-18',
-    anlage: 'Förderbandanlage C',
-    meldetext: 'Notfallreparatur - Band gerissen',
+    kategorie: 'Druckluft',
+    unterkategorie: 'Kompressor Station 1',
+    meldetext: 'Notfallreparatur - Kompressor ausgefallen',
     verantwortlicher: 'Robert Lang',
     ausfuehrender: 'Stefan Gross',
     status: 'abgeschlossen',
     prioritaet: 'kritisch',
-    geschaetzteDauer: 240,
+    abteilung: 'Notfall',
+    geschaetzteDauer: 4,
     ausfuehrungen: [
       {
         id: '2',
@@ -183,12 +166,13 @@ const mockAuftraege: Auftrag[] = [
         id: '3',
         datum: '2025-01-15',
         uhrzeit: '14:00',
-        beschreibung: 'Neues Band montiert und getestet',
+        beschreibung: 'Kompressor repariert und getestet',
         zeitaufwand: 180,
         bearbeiter: 'Stefan Gross'
       }
     ],
-    gesamtzeit: 210
+    gesamtzeit: 210,
+    dateien: []
   }
 ];
 
@@ -203,6 +187,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('alle');
   const [priorityFilter, setPriorityFilter] = useState<string>('alle');
+  const [abteilungFilter, setAbteilungFilter] = useState<string>('alle');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingAuftrag, setEditingAuftrag] = useState<Auftrag | null>(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -240,6 +225,26 @@ function App() {
     }
   };
 
+  const getAbteilungColor = (abteilung: string) => {
+    const colors = {
+      'Wartung': 'bg-green-100 text-green-700',
+      'Reparatur': 'bg-orange-100 text-orange-700',
+      'Inspektion': 'bg-blue-100 text-blue-700',
+      'Notfall': 'bg-red-100 text-red-700',
+      'Modernisierung': 'bg-purple-100 text-purple-700'
+    };
+    return colors[abteilung as keyof typeof colors] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getAllCategories = (categories = userData.settings.kategorien): any[] => {
+    let result: any[] = [];
+    for (const cat of categories) {
+      result.push(cat);
+      result = result.concat(getAllCategories(cat.children));
+    }
+    return result;
+  };
+
   const generateAuftragsnummer = () => {
     const year = new Date().getFullYear();
     const nummer = String(userData.settings.naechsteAuftragsnummer).padStart(3, '0');
@@ -252,15 +257,18 @@ function App() {
       auftragsnummer: generateAuftragsnummer(),
       erteiltAm: new Date().toISOString().split('T')[0],
       erledigenBis: auftragData.erledigenBis || '',
-      anlage: auftragData.anlage || '',
+      kategorie: auftragData.kategorie || '',
+      unterkategorie: auftragData.unterkategorie,
       meldetext: auftragData.meldetext || '',
       verantwortlicher: auftragData.verantwortlicher || '',
       ausfuehrender: auftragData.ausfuehrender || '',
       status: 'offen',
       prioritaet: auftragData.prioritaet || 'normal',
+      abteilung: auftragData.abteilung || '',
       geschaetzteDauer: auftragData.geschaetzteDauer || 0,
       ausfuehrungen: [],
-      gesamtzeit: 0
+      gesamtzeit: 0,
+      dateien: []
     };
 
     setUserData(prev => ({
@@ -325,19 +333,32 @@ function App() {
     exportToExcel(filteredAndSortedAuftraege, 'auftraege');
   };
 
+  const handlePDFExport = (auftrag: Auftrag) => {
+    generatePDF(auftrag);
+  };
+
+  // Filter aufträge für aktuellen Benutzer
+  const userAuftraege = useMemo(() => {
+    return userData.auftraege.filter(auftrag => 
+      auftrag.verantwortlicher === currentUser || auftrag.ausfuehrender === currentUser
+    );
+  }, [userData.auftraege, currentUser]);
+
   const filteredAndSortedAuftraege = useMemo(() => {
-    let filtered = userData.auftraege.filter(auftrag => {
+    let filtered = userAuftraege.filter(auftrag => {
       const matchesSearch = searchTerm === '' || 
         auftrag.auftragsnummer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        auftrag.anlage.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        auftrag.kategorie.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (auftrag.unterkategorie && auftrag.unterkategorie.toLowerCase().includes(searchTerm.toLowerCase())) ||
         auftrag.meldetext.toLowerCase().includes(searchTerm.toLowerCase()) ||
         auftrag.verantwortlicher.toLowerCase().includes(searchTerm.toLowerCase()) ||
         auftrag.ausfuehrender.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = statusFilter === 'alle' || auftrag.status === statusFilter;
       const matchesPriority = priorityFilter === 'alle' || auftrag.prioritaet === priorityFilter;
+      const matchesAbteilung = abteilungFilter === 'alle' || auftrag.abteilung === abteilungFilter;
       
-      return matchesSearch && matchesStatus && matchesPriority;
+      return matchesSearch && matchesStatus && matchesPriority && matchesAbteilung;
     });
 
     // Sortierung anwenden
@@ -372,14 +393,34 @@ function App() {
     });
 
     return filtered;
-  }, [userData.auftraege, searchTerm, statusFilter, priorityFilter, sortField, sortDirection]);
+  }, [userAuftraege, searchTerm, statusFilter, priorityFilter, abteilungFilter, sortField, sortDirection]);
 
   const statusCounts = useMemo(() => {
-    return userData.auftraege.reduce((acc, auftrag) => {
+    return userAuftraege.reduce((acc, auftrag) => {
       acc[auftrag.status] = (acc[auftrag.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-  }, [userData.auftraege]);
+  }, [userAuftraege]);
+
+  // Dashboard Prioritäten - nur hohe/kritische Aufträge anzeigen
+  const dashboardPriorities = useMemo(() => {
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
+
+    return userAuftraege.filter(auftrag => {
+      if (auftrag.status === 'abgeschlossen') return false;
+      
+      if (auftrag.prioritaet === 'kritisch') return true;
+      
+      if (auftrag.prioritaet === 'hoch') {
+        const erledigenBis = new Date(auftrag.erledigenBis);
+        return erledigenBis <= threeDaysFromNow;
+      }
+      
+      return false;
+    });
+  }, [userAuftraege]);
 
   const isOverdue = (erledigenBis: string, status: string) => {
     return new Date(erledigenBis) < new Date() && status !== 'abgeschlossen';
@@ -451,22 +492,28 @@ function App() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Aktuelle Prioritäten</h3>
         <div className="space-y-3">
-          {userData.auftraege
-            .filter(a => a.status === 'ueberfaellig' || a.prioritaet === 'kritisch')
-            .slice(0, 5)
-            .map(auftrag => (
+          {dashboardPriorities.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <AlertTriangle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p>Keine prioritären Aufträge</p>
+            </div>
+          ) : (
+            dashboardPriorities.slice(0, 10).map(auftrag => (
               <div key={auftrag.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
                 <div className="flex items-center space-x-3">
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                   <div>
                     <p className="font-medium text-gray-900">{auftrag.auftragsnummer}</p>
-                    <p className="text-sm text-gray-600">{auftrag.anlage}</p>
+                    <p className="text-sm text-gray-600">{auftrag.kategorie} {auftrag.unterkategorie && `→ ${auftrag.unterkategorie}`}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <span className={`text-xs px-2 py-1 rounded ${getAbteilungColor(auftrag.abteilung)}`}>
+                    {auftrag.abteilung}
+                  </span>
                   {auftrag.geschaetzteDauer > 0 && (
                     <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                      Geschätzt: {formatZeit(auftrag.geschaetzteDauer)}
+                      Geschätzt: {auftrag.geschaetzteDauer}h
                     </span>
                   )}
                   {auftrag.gesamtzeit > 0 && (
@@ -479,7 +526,8 @@ function App() {
                   </span>
                 </div>
               </div>
-            ))}
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -522,6 +570,16 @@ function App() {
               <option value="normal">Normal</option>
               <option value="hoch">Hoch</option>
               <option value="kritisch">Kritisch</option>
+            </select>
+            <select
+              value={abteilungFilter}
+              onChange={(e) => setAbteilungFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="alle">Alle Abteilungen</option>
+              {userData.settings.abteilungen.map(abteilung => (
+                <option key={abteilung} value={abteilung}>{abteilung}</option>
+              ))}
             </select>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -573,11 +631,11 @@ function App() {
                 </th>
                 <th 
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={() => handleSort('anlage')}
+                  onClick={() => handleSort('kategorie')}
                 >
                   <div className="flex items-center gap-1">
-                    Anlage
-                    {getSortIcon('anlage')}
+                    Kategorie
+                    {getSortIcon('kategorie')}
                   </div>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Meldetext</th>
@@ -601,6 +659,15 @@ function App() {
                     {getSortIcon('prioritaet')}
                   </div>
                 </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort('abteilung')}
+                >
+                  <div className="flex items-center gap-1">
+                    Abteilung
+                    {getSortIcon('abteilung')}
+                  </div>
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zeit</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
               </tr>
@@ -620,8 +687,11 @@ function App() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-xs truncate" title={auftrag.anlage}>
-                      {auftrag.anlage}
+                    <div className="text-sm text-gray-900">
+                      {auftrag.kategorie}
+                      {auftrag.unterkategorie && (
+                        <div className="text-xs text-gray-500">→ {auftrag.unterkategorie}</div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -653,12 +723,17 @@ function App() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getAbteilungColor(auftrag.abteilung)}`}>
+                      {auftrag.abteilung}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
                       {auftrag.gesamtzeit > 0 ? formatZeit(auftrag.gesamtzeit) : '-'}
                     </div>
                     {auftrag.geschaetzteDauer > 0 && (
                       <div className="text-xs text-blue-600">
-                        Geschätzt: {formatZeit(auftrag.geschaetzteDauer)}
+                        Geschätzt: {auftrag.geschaetzteDauer}h
                       </div>
                     )}
                     {auftrag.ausfuehrungen.length > 0 && (
@@ -668,13 +743,22 @@ function App() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => setEditingAuftrag(auftrag)}
-                      className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
-                      title="Auftrag bearbeiten"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setEditingAuftrag(auftrag)}
+                        className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
+                        title="Auftrag bearbeiten"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handlePDFExport(auftrag)}
+                        className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded transition-colors"
+                        title="PDF exportieren"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -807,12 +891,14 @@ function App() {
               const formData = new FormData(e.currentTarget);
               createAuftrag({
                 erledigenBis: formData.get('erledigenBis') as string,
-                anlage: formData.get('anlage') as string,
+                kategorie: formData.get('kategorie') as string,
+                unterkategorie: formData.get('unterkategorie') as string || undefined,
                 meldetext: formData.get('meldetext') as string,
                 verantwortlicher: formData.get('verantwortlicher') as string,
                 ausfuehrender: formData.get('ausfuehrender') as string,
                 prioritaet: formData.get('prioritaet') as Auftrag['prioritaet'],
-                geschaetzteDauer: parseInt(formData.get('geschaetzteDauer') as string) || 0
+                abteilung: formData.get('abteilung') as string,
+                geschaetzteDauer: parseFloat(formData.get('geschaetzteDauer') as string) || 0
               });
               setShowCreateModal(false);
             }}>
@@ -826,18 +912,34 @@ function App() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Anlage</label>
-                  <select 
-                    name="anlage"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Anlage auswählen</option>
-                    {userData.settings.anlagen.map(anlage => (
-                      <option key={anlage.id} value={anlage.name}>{anlage.name}</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+                    <select 
+                      name="kategorie"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Kategorie auswählen</option>
+                      {userData.settings.kategorien.map(kategorie => (
+                        <option key={kategorie.id} value={kategorie.name}>{kategorie.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Unterkategorie (optional)</label>
+                    <select 
+                      name="unterkategorie"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Unterkategorie auswählen</option>
+                      {getAllCategories().filter(cat => cat.level > 0).map(kategorie => (
+                        <option key={kategorie.id} value={kategorie.name}>
+                          {'→'.repeat(kategorie.level)} {kategorie.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Meldetext</label>
@@ -876,7 +978,7 @@ function App() {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Priorität</label>
                     <select 
@@ -890,12 +992,26 @@ function App() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Geschätzte Dauer (Minuten)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Abteilung</label>
+                    <select 
+                      name="abteilung"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Abteilung auswählen</option>
+                      {userData.settings.abteilungen.map(abteilung => (
+                        <option key={abteilung} value={abteilung}>{abteilung}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Geschätzte Dauer (Stunden)</label>
                     <input 
                       name="geschaetzteDauer"
                       type="number"
+                      step="0.5"
                       min="0"
-                      placeholder="z.B. 120"
+                      placeholder="z.B. 2.5"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -929,6 +1045,7 @@ function App() {
           onClose={() => setEditingAuftrag(null)}
           currentUser={currentUser}
           isAdmin={isAdminMode}
+          settings={userData.settings}
         />
       )}
 
