@@ -736,7 +736,7 @@ function App() {
                     </div>
                     {auftrag.geschaetzteDauer > 0 && (
                       <div className="text-xs text-blue-600">
-                        Geschätzt: {auftrag.geschaetzteDauer.toString().replace('.', ',')}h
+                        Geschätzt: {auftrag.geschaetzteDauer}h
                       </div>
                     )}
                     {auftrag.ausfuehrungen.length > 0 && (
@@ -929,34 +929,52 @@ interface CreateOrderFormProps {
 function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps) {
   const [selectedKategorie, setSelectedKategorie] = useState<string>('');
   const [selectedUnterkategorie, setSelectedUnterkategorie] = useState<string | undefined>();
+  const [formData, setFormData] = useState({
+    erledigenBis: '',
+    meldetext: '',
+    verantwortlicher: '',
+    ausfuehrender: '',
+    prioritaet: 'normal' as Auftrag['prioritaet'],
+    abteilung: '',
+    geschaetzteDauer: ''
+  });
+
+  const isFormValid = selectedKategorie && 
+                     formData.erledigenBis && 
+                     formData.meldetext && 
+                     formData.verantwortlicher && 
+                     formData.ausfuehrender && 
+                     formData.abteilung;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
-    const geschaetzteDauerStr = formData.get('geschaetzteDauer') as string;
-    const geschaetzteDauer = geschaetzteDauerStr ? parseFloat(geschaetzteDauerStr.replace(',', '.')) : 0;
+    const geschaetzteDauer = formData.geschaetzteDauer ? parseFloat(formData.geschaetzteDauer.replace(',', '.')) : 0;
     
     onSubmit({
-      erledigenBis: formData.get('erledigenBis') as string,
+      erledigenBis: formData.erledigenBis,
       kategorie: selectedKategorie,
       unterkategorie: selectedUnterkategorie,
-      meldetext: formData.get('meldetext') as string,
-      verantwortlicher: formData.get('verantwortlicher') as string,
-      ausfuehrender: formData.get('ausfuehrender') as string,
-      prioritaet: formData.get('prioritaet') as Auftrag['prioritaet'],
-      abteilung: formData.get('abteilung') as string,
+      meldetext: formData.meldetext,
+      verantwortlicher: formData.verantwortlicher,
+      ausfuehrender: formData.ausfuehrender,
+      prioritaet: formData.prioritaet,
+      abteilung: formData.abteilung,
       geschaetzteDauer
     });
   };
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
   return (
     <form onSubmit={handleSubmit}>
       <div className="p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Erledigen bis</label>
           <input 
-            name="erledigenBis"
             type="date" 
+            value={formData.erledigenBis}
+            onChange={(e) => handleInputChange('erledigenBis', e.target.value)}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
           />
@@ -974,8 +992,9 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Meldetext</label>
           <textarea 
-            name="meldetext"
             rows={3} 
+            value={formData.meldetext}
+            onChange={(e) => handleInputChange('meldetext', e.target.value)}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
@@ -984,7 +1003,8 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Verantwortlicher</label>
             <select 
-              name="verantwortlicher"
+              value={formData.verantwortlicher}
+              onChange={(e) => handleInputChange('verantwortlicher', e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -997,7 +1017,8 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ausführender</label>
             <select 
-              name="ausfuehrender"
+              value={formData.ausfuehrender}
+              onChange={(e) => handleInputChange('ausfuehrender', e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1012,7 +1033,8 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Priorität</label>
             <select 
-              name="prioritaet"
+              value={formData.prioritaet}
+              onChange={(e) => handleInputChange('prioritaet', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="niedrig">Niedrig</option>
@@ -1024,7 +1046,8 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Abteilung</label>
             <select 
-              name="abteilung"
+              value={formData.abteilung}
+              onChange={(e) => handleInputChange('abteilung', e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
@@ -1037,10 +1060,9 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Geschätzte Dauer (Stunden)</label>
             <input 
-              name="geschaetzteDauer"
               type="text"
-              step="0.5"
-              min="0"
+              value={formData.geschaetzteDauer}
+              onChange={(e) => handleInputChange('geschaetzteDauer', e.target.value)}
               placeholder="z.B. 2,5"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -1057,8 +1079,12 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
         </button>
         <button
           type="submit"
-          disabled={!selectedKategorie}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          disabled={!isFormValid}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            isFormValid 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
           Auftrag erstellen
         </button>
