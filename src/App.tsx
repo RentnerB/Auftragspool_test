@@ -736,7 +736,7 @@ function App() {
                     </div>
                     {auftrag.geschaetzteDauer > 0 && (
                       <div className="text-xs text-blue-600">
-                        Geschätzt: {auftrag.geschaetzteDauer.toString().replace('.', ',')}h
+                        Geschätzt: {auftrag.geschaetzteDauer}h
                       </div>
                     )}
                     {auftrag.ausfuehrungen.length > 0 && (
@@ -932,7 +932,7 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
     const geschaetzteDauerStr = formData.get('geschaetzteDauer') as string;
     const geschaetzteDauer = geschaetzteDauerStr ? parseFloat(geschaetzteDauerStr.replace(',', '.')) : 0;
     
@@ -1064,178 +1064,6 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
         </button>
       </div>
     </form>
-  );
-}
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              createAuftrag({
-                erledigenBis: formData.get('erledigenBis') as string,
-                kategorie: formData.get('kategorie') as string,
-                unterkategorie: formData.get('unterkategorie') as string || undefined,
-                meldetext: formData.get('meldetext') as string,
-                verantwortlicher: formData.get('verantwortlicher') as string,
-                ausfuehrender: formData.get('ausfuehrender') as string,
-                prioritaet: formData.get('prioritaet') as Auftrag['prioritaet'],
-                abteilung: formData.get('abteilung') as string,
-                geschaetzteDauer: parseFloat(formData.get('geschaetzteDauer') as string) || 0
-              });
-              setShowCreateModal(false);
-            }}>
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Erledigen bis</label>
-                  <input 
-                    name="erledigenBis"
-                    type="date" 
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
-                    <select 
-                      name="kategorie"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Kategorie auswählen</option>
-                      {userData.settings.kategorien.map(kategorie => (
-                        <option key={kategorie.id} value={kategorie.name}>{kategorie.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Unterkategorie (optional)</label>
-                    <select 
-                      name="unterkategorie"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Unterkategorie auswählen</option>
-                      {getAllCategories().filter(cat => cat.level > 0).map(kategorie => (
-                        <option key={kategorie.id} value={kategorie.name}>
-                          {'→'.repeat(kategorie.level)} {kategorie.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Meldetext</label>
-                  <textarea 
-                    name="meldetext"
-                    rows={3} 
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Verantwortlicher</label>
-                    <select 
-                      name="verantwortlicher"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Verantwortlicher auswählen</option>
-                      {userData.settings.benutzer.map(benutzer => (
-                        <option key={benutzer} value={benutzer}>{benutzer}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ausführender</label>
-                    <select 
-                      name="ausfuehrender"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Ausführender auswählen</option>
-                      {userData.settings.benutzer.map(benutzer => (
-                        <option key={benutzer} value={benutzer}>{benutzer}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Priorität</label>
-                    <select 
-                      name="prioritaet"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="niedrig">Niedrig</option>
-                      <option value="normal">Normal</option>
-                      <option value="hoch">Hoch</option>
-                      <option value="kritisch">Kritisch</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Abteilung</label>
-                    <select 
-                      name="abteilung"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Abteilung auswählen</option>
-                      {userData.settings.abteilungen.map(abteilung => (
-                        <option key={abteilung} value={abteilung}>{abteilung}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Geschätzte Dauer (Stunden)</label>
-                    <input 
-                      name="geschaetzteDauer"
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      placeholder="z.B. 2.5"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Abbrechen
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Auftrag erstellen
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {editingAuftrag && (
-        <AuftragBearbeiten
-          auftrag={editingAuftrag}
-          onSave={updateAuftrag}
-          onClose={() => setEditingAuftrag(null)}
-          currentUser={currentUser}
-          isAdmin={isAdminMode}
-          settings={userData.settings}
-        />
-      )}
-
-      {/* Admin Login Modal */}
-      {showAdminLogin && (
-        <AdminLogin
-          onLogin={handleAdminLogin}
-          onCancel={() => setShowAdminLogin(false)}
-        />
-      )}
-    </div>
   );
 }
 
