@@ -106,7 +106,9 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
   const formatZeit = (minuten: number) => {
     const stunden = Math.floor(minuten / 60);
     const mins = minuten % 60;
-    return stunden > 0 ? `${stunden}h ${mins}min` : `${mins}min`;
+    const stundenStr = stunden > 0 ? stunden.toString().replace('.', ',') : '';
+    const minsStr = mins.toString().replace('.', ',');
+    return stunden > 0 ? `${stundenStr}h ${minsStr}min` : `${minsStr}min`;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -266,10 +268,10 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    step="0.5"
+                    step="0,5"
                     min="0"
                     value={updatedAuftrag.geschaetzteDauer}
-                    onChange={(e) => handleGeschaetzteDauerChange(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => handleGeschaetzteDauerChange(parseFloat(e.target.value.replace(',', '.')) || 0)}
                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <span className="text-sm text-gray-600">Stunden</span>

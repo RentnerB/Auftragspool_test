@@ -8,7 +8,9 @@ export const generatePDF = (auftrag: Auftrag) => {
   const formatZeit = (minuten: number) => {
     const stunden = Math.floor(minuten / 60);
     const mins = minuten % 60;
-    return stunden > 0 ? `${stunden}h ${mins}min` : `${mins}min`;
+    const stundenStr = stunden > 0 ? stunden.toString().replace('.', ',') : '';
+    const minsStr = mins.toString().replace('.', ',');
+    return stunden > 0 ? `${stundenStr}h ${minsStr}min` : `${minsStr}min`;
   };
 
   const getStatusText = (status: string) => {
@@ -240,7 +242,7 @@ export const generatePDF = (auftrag: Auftrag) => {
           </div>
           <div class="info-row">
             <span class="info-label">Geschätzte Dauer:</span>
-            <span class="info-value">${auftrag.geschaetzteDauer > 0 ? `${auftrag.geschaetzteDauer}h` : 'Nicht angegeben'}</span>
+            <span class="info-value">${auftrag.geschaetzteDauer > 0 ? `${auftrag.geschaetzteDauer.toString().replace('.', ',')}h` : 'Nicht angegeben'}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Gesamtzeit:</span>

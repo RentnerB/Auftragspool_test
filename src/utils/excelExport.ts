@@ -54,5 +54,5 @@ export const exportToExcel = (auftraege: Auftrag[], filename: string = 'auftraeg
 const formatZeitForExcel = (minuten: number): string => {
   const stunden = Math.floor(minuten / 60);
   const mins = minuten % 60;
-  return `${stunden}:${mins.toString().padStart(2, '0')}`;
+  return `${stunden.toString().replace('.', ',')}:${mins.toString().padStart(2, '0')}`;
 };
