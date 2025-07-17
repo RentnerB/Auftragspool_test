@@ -736,7 +736,7 @@ function App() {
                     </div>
                     {auftrag.geschaetzteDauer > 0 && (
                       <div className="text-xs text-blue-600">
-                        Geschätzt: {auftrag.geschaetzteDauer}h
+                        Geschätzt: {auftrag.geschaetzteDauer.toString().replace('.', ',')}h
                       </div>
                     )}
                     {auftrag.ausfuehrungen.length > 0 && (
