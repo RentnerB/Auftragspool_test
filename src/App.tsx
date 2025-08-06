@@ -955,6 +955,16 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form validation:', {
+      selectedKategorie,
+      erledigenBis,
+      meldetext,
+      verantwortlicher,
+      ausfuehrender,
+      abteilung,
+      isFormValid
+    });
+    
     if (!isFormValid) {
       alert('Bitte füllen Sie alle Pflichtfelder aus.');
       return;
@@ -962,7 +972,7 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
     
     const geschaetzteDauerValue = geschaetzteDauer ? parseFloat(geschaetzteDauer.replace(',', '.')) : 0;
     
-    onSubmit({
+    const auftragData = {
       erledigenBis: erledigenBis,
       kategorie: selectedKategorie,
       unterkategorie: selectedUnterkategorie,
@@ -971,8 +981,12 @@ function CreateOrderForm({ onSubmit, onCancel, settings }: CreateOrderFormProps)
       ausfuehrender: ausfuehrender,
       prioritaet: prioritaet,
       abteilung: abteilung,
-      geschaetzteDauer
-    });
+      geschaetzteDauer: geschaetzteDauerValue
+    };
+    
+    console.log('Submitting auftrag data:', auftragData);
+    
+    onSubmit(auftragData);
   };
 
   console.log('Form validation:', {
