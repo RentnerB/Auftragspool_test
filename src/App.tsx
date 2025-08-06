@@ -253,6 +253,8 @@ function App() {
   };
 
   const createAuftrag = (auftragData: Partial<Auftrag>) => {
+    console.log('Creating auftrag with data:', auftragData);
+    
     const neuerAuftrag: Auftrag = {
       id: Date.now().toString(),
       auftragsnummer: generateAuftragsnummer(),
@@ -272,11 +274,15 @@ function App() {
       dateien: []
     };
 
+    console.log('New auftrag created:', neuerAuftrag);
+
     setUserData(prev => ({
       ...prev,
       auftraege: [...prev.auftraege, neuerAuftrag],
       settings: { ...prev.settings, naechsteAuftragsnummer: prev.settings.naechsteAuftragsnummer + 1 }
     }));
+    
+    console.log('UserData updated');
   };
 
   const updateAuftrag = (updatedAuftrag: Auftrag) => {
@@ -340,9 +346,11 @@ function App() {
 
   // Filter aufträge für aktuellen Benutzer
   const userAuftraege = useMemo(() => {
-    return userData.auftraege.filter(auftrag => 
-      auftrag.verantwortlicher === currentUser || auftrag.ausfuehrender === currentUser
-    );
+    console.log('All auftraege:', userData.auftraege);
+    console.log('Current user:', currentUser);
+    
+    // Zeige ALLE Aufträge für die Firma, nicht nur die des aktuellen Benutzers
+    return userData.auftraege;
   }, [userData.auftraege, currentUser]);
 
   const filteredAndSortedAuftraege = useMemo(() => {
