@@ -22,7 +22,11 @@ export function useSupabaseStorage(username: string, initialValue: UserData) {
         setError(null);
         
         // Versuche Benutzer zu registrieren/anmelden
-        await supabaseService.registerUser(username);
+        const registerResult = await supabaseService.registerUser(username);
+        
+        if (registerResult.fallback) {
+          setError('Offline-Modus: Daten werden lokal gespeichert');
+        }
         
         // Lade Benutzerdaten
         const loadedData = await supabaseService.loadUserData(username);
@@ -36,11 +40,17 @@ export function useSupabaseStorage(username: string, initialValue: UserData) {
         }
       } catch (err) {
         console.error('Fehler beim Laden der Daten:', err);
-        setError('Fehler beim Laden der Daten. Verwende lokale Speicherung.');
+        setError('Offline-Modus: Verwende lokale Speicherung');
+        
         // Fallback auf lokale Speicherung
         const localData = localStorage.getItem(`userData_${username}`);
         if (localData) {
-          setUserData(JSON.parse(localData));
+          try {
+            setUserData(JSON.parse(localData));
+          } catch (parseError) {
+            console.error('Fehler beim Parsen der lokalen Daten:', parseError);
+            setUserData(initialValue);
+          }
         } else {
           setUserData(initialValue);
         }
@@ -60,15 +70,22 @@ export function useSupabaseStorage(username: string, initialValue: UserData) {
       // Optimistische Aktualisierung
       setUserData(updatedData);
       
-      // Speichere in Supabase
+      // Speichere in Supabase (mit Fallback)
       if (username) {
-        await supabaseService.saveUserData(username, updatedData);
+        const result = await supabaseService.saveUserData(username, updatedData);
+        
+        if (result.fallback) {
+          setError('Offline-Modus: Daten wurden lokal gespeichert');
+        } else {
+          // Erfolgreich in Supabase gespeichert
+          if (error && error.includes('Offline-Modus')) {
+            setError(null);
+          }
+        }
       }
-      
-      setError(null);
     } catch (err) {
       console.error('Fehler beim Speichern der Daten:', err);
-      setError('Fehler beim Speichern. Daten wurden lokal gespeichert.');
+      setError('Offline-Modus: Daten wurden lokal gespeichert');
       
       // Fallback: Lokale Speicherung
       if (username) {
@@ -83,6 +100,7 @@ export function useSupabaseStorage(username: string, initialValue: UserData) {
     setUserData: updateUserData,
     isLoading,
     error,
-    clearError: () => setError(null)
+    clearError: () => setError(null),
+    isOffline: !supabaseService.isAvailable()
   };
 }

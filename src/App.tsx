@@ -184,6 +184,13 @@ function App() {
     auftraege: mockAuftraege,
     settings: initialSettings
   });
+
+  // Import X icon for error dismissal
+  const X = ({ className }: { className?: string }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
@@ -881,14 +888,16 @@ function App() {
         <div className="max-w-7xl mx-auto">
           {/* Fehleranzeige */}
           {error && (
-            <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg flex items-center justify-between">
+            <div className="mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
+                <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">!</span>
+                </div>
                 <span>{error}</span>
               </div>
               <button
                 onClick={clearError}
-                className="text-yellow-700 hover:text-yellow-900"
+                className="text-blue-700 hover:text-blue-900"
               >
                 <X className="w-4 h-4" />
               </button>
