@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Plus, Download, BarChart3, Settings, ClipboardList, User, AlertTriangle, CheckCircle, Clock, Edit, Shield, ArrowUpDown, ArrowUp, ArrowDown, LogOut, FileText } from 'lucide-react';
 import { Auftrag, AppSettings, SortField, SortDirection, UserData } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useSupabaseStorage } from './hooks/useSupabaseStorage';
 import { AuftragBearbeiten } from './components/AuftragBearbeiten';
 import { AdminEinstellungen } from './components/AdminEinstellungen';
 import { AdminLogin } from './components/AdminLogin';
@@ -179,7 +180,7 @@ const mockAuftraege: Auftrag[] = [
 
 function App() {
   const [currentUser, setCurrentUser] = useState<string>('');
-  const [userData, setUserData] = useLocalStorage<UserData>(`userData_${currentUser}`, {
+  const { userData, setUserData, isLoading, error, clearError } = useSupabaseStorage(currentUser, {
     auftraege: mockAuftraege,
     settings: initialSettings
   });
@@ -195,6 +196,18 @@ function App() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [sortField, setSortField] = useState<SortField>('auftragsnummer');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Zeige Ladeanzeige
+  if (isLoading && currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Lade Auftragsdaten...</p>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -866,6 +879,22 @@ function App() {
       {/* Main Content */}
       <div className="ml-64 p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Fehleranzeige */}
+          {error && (
+            <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                <span>{error}</span>
+              </div>
+              <button
+                onClick={clearError}
+                className="text-yellow-700 hover:text-yellow-900"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900">
               {activeTab === 'dashboard' && 'Dashboard'}
