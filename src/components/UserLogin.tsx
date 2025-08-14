@@ -13,6 +13,8 @@ export function UserLogin({ onLogin }: UserLoginProps) {
     e.preventDefault();
     const trimmedUsername = username.trim();
     
+    console.log('UserLogin handleSubmit called with:', trimmedUsername);
+    
     if (!trimmedUsername) {
       setError('Bitte geben Sie einen Benutzernamen ein');
       return;
@@ -23,7 +25,9 @@ export function UserLogin({ onLogin }: UserLoginProps) {
       return;
     }
 
+    console.log('Calling onLogin with:', trimmedUsername);
     onLogin(trimmedUsername);
+    console.log('onLogin called successfully');
   };
 
   return (

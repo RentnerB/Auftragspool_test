@@ -180,10 +180,16 @@ const mockAuftraege: Auftrag[] = [
 
 function App() {
   const [currentUser, setCurrentUser] = useState<string>('');
+  
+  // Debug logging
+  console.log('App render - currentUser:', currentUser);
+  
   const { userData, setUserData, isLoading, error, clearError } = useSupabaseStorage(currentUser, {
     auftraege: mockAuftraege,
     settings: initialSettings
   });
+
+  console.log('App render - isLoading:', isLoading, 'error:', error);
 
   // Import X icon for error dismissal
   const X = ({ className }: { className?: string }) => (
@@ -204,8 +210,18 @@ function App() {
   const [sortField, setSortField] = useState<SortField>('auftragsnummer');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  // Zeige Ladeanzeige
-  if (isLoading && currentUser) {
+  // If no user is logged in, show login screen
+  if (!currentUser) {
+    console.log('Showing login screen - no current user');
+    return <UserLogin onLogin={(username) => {
+      console.log('Login callback called with username:', username);
+      setCurrentUser(username);
+    }} />;
+  }
+
+  // Zeige Ladeanzeige nur wenn Benutzer eingeloggt ist
+  if (isLoading) {
+    console.log('Showing loading screen');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -216,10 +232,7 @@ function App() {
     );
   }
 
-  // If no user is logged in, show login screen
-  if (!currentUser) {
-    return <UserLogin onLogin={setCurrentUser} />;
-  }
+  console.log('Rendering main app for user:', currentUser);
 
   const getStatusColor = (status: string) => {
     switch (status) {
