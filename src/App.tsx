@@ -216,6 +216,11 @@ function App() {
     );
   }
 
+  // If no user is logged in, show login screen
+  if (!currentUser) {
+    return <UserLogin onLogin={setCurrentUser} />;
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'offen': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -462,11 +467,6 @@ function App() {
     const minsStr = mins.toString().replace('.', ',');
     return stunden > 0 ? `${stundenStr}h ${minsStr}min` : `${minsStr}min`;
   };
-
-  // If no user is logged in, show login screen
-  if (!currentUser) {
-    return <UserLogin onLogin={setCurrentUser} />;
-  }
 
   const renderDashboard = () => (
     <div className="space-y-6">
