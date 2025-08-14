@@ -18,57 +18,39 @@
   <h2>Status</h2>
   <pre id="status">Noch nicht eingeloggt</pre>
 
+  <!-- 1️⃣ Supabase-Bibliothek laden -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- 2️⃣ Jetzt erst eigenen Code starten -->
   <script>
     const SUPABASE_URL = "https://qivzrvifdlvrjxtkbxef.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdnpydmlmZGx2cmp4dGtieGVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NTU3NDAsImV4cCI6MjA3MDAzMTc0MH0.0atwcPcp_4jAEFkGMVYpxzPU7LfvexCErZnB5XNNvl8";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Supabase Client erstellen
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function register() {
       const username = document.getElementById("reg-username").value.trim();
       const password = document.getElementById("reg-password").value;
-
       if (!username || !password) {
         alert("Bitte Benutzername und Passwort eingeben.");
         return;
       }
-
-      // Fake-E-Mail, da Supabase E-Mail benötigt
       const email = `${username}@example.com`;
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      });
-
-      if (error) {
-        document.getElementById("status").innerText = "Fehler: " + error.message;
-      } else {
-        document.getElementById("status").innerText = "Registrierung erfolgreich!";
-      }
+      const { error } = await sb.auth.signUp({ email, password });
+      document.getElementById("status").innerText = error ? `Fehler: ${error.message}` : "Registrierung erfolgreich!";
     }
 
     async function login() {
       const username = document.getElementById("login-username").value.trim();
       const password = document.getElementById("login-password").value;
-
       if (!username || !password) {
         alert("Bitte Benutzername und Passwort eingeben.");
         return;
       }
-
       const email = `${username}@example.com`;
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        document.getElementById("status").innerText = "Fehler: " + error.message;
-      } else {
-        document.getElementById("status").innerText = "Login erfolgreich!";
-      }
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      document.getElementById("status").innerText = error ? `Fehler: ${error.message}` : "Login erfolgreich!";
     }
   </script>
 </body>
