@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Username Login</title>
+  <title>Supabase Username Login</title>
 </head>
 <body>
-  <h1>Login / Registrierung</h1>
+  <h2>Registrieren</h2>
+  <input id="reg-username" placeholder="Benutzername">
+  <input id="reg-password" type="password" placeholder="Passwort">
+  <button onclick="register()">Registrieren</button>
 
-  <div>
-    <input type="text" id="username" placeholder="Benutzername">
-    <input type="password" id="password" placeholder="Passwort">
-    <button id="registerBtn">Registrieren</button>
-    <button id="loginBtn">Einloggen</button>
-  </div>
+  <h2>Login</h2>
+  <input id="login-username" placeholder="Benutzername">
+  <input id="login-password" type="password" placeholder="Passwort">
+  <button onclick="login()">Login</button>
 
-  <p id="status"></p>
+  <h2>Status</h2>
+  <pre id="status">Noch nicht eingeloggt</pre>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -24,37 +25,51 @@
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function register() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      const username = document.getElementById("reg-username").value.trim();
+      const password = document.getElementById("reg-password").value;
 
-      // Fake-E-Mail aus Username erstellen
-      const email = username + "@example.com";
+      if (!username || !password) {
+        alert("Bitte Benutzername und Passwort eingeben.");
+        return;
+      }
+
+      // Fake-E-Mail, da Supabase E-Mail benötigt
+      const email = `${username}@example.com`;
 
       const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: { data: { username: username } }
+        email,
+        password
       });
 
-      document.getElementById("status").innerText = error ? error.message : "Registrierung erfolgreich!";
+      if (error) {
+        document.getElementById("status").innerText = "Fehler: " + error.message;
+      } else {
+        document.getElementById("status").innerText = "Registrierung erfolgreich!";
+      }
     }
 
     async function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
 
-      const email = username + "@example.com";
+      if (!username || !password) {
+        alert("Bitte Benutzername und Passwort eingeben.");
+        return;
+      }
+
+      const email = `${username}@example.com`;
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+        email,
+        password
       });
 
-      document.getElementById("status").innerText = error ? error.message : "Login erfolgreich!";
+      if (error) {
+        document.getElementById("status").innerText = "Fehler: " + error.message;
+      } else {
+        document.getElementById("status").innerText = "Login erfolgreich!";
+      }
     }
-
-    document.getElementById("registerBtn").addEventListener("click", register);
-    document.getElementById("loginBtn").addEventListener("click", login);
   </script>
 </body>
 </html>
