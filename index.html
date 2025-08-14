@@ -1,91 +1,60 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Username Login</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      width: 300px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    h2 { text-align: center; }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover { background: #45a049; }
-    .message { margin-top: 10px; text-align: center; color: red; }
-  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Login / Registrieren</h2>
-    <input type="text" id="username" placeholder="Benutzername" />
-    <input type="password" id="password" placeholder="Passwort" />
-    <button onclick="register()">Registrieren</button>
-    <button onclick="login()">Login</button>
-    <div class="message" id="message"></div>
+  <h1>Login / Registrierung</h1>
+
+  <div>
+    <input type="text" id="username" placeholder="Benutzername">
+    <input type="password" id="password" placeholder="Passwort">
+    <button id="registerBtn">Registrieren</button>
+    <button id="loginBtn">Einloggen</button>
   </div>
 
+  <p id="status"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const REGISTER_URL = "https://qivzrvifdlvrjxtkbxef.supabase.co/functions/v1/rapid-service";
-    const LOGIN_URL = "https://qivzrvifdlvrjxtkbxef.supabase.co/functions/v1/Login";
+    const SUPABASE_URL = "https://qivzrvifdlvrjxtkbxef.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpdnpydmlmZGx2cmp4dGtieGVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NTU3NDAsImV4cCI6MjA3MDAzMTc0MH0.0atwcPcp_4jAEFkGMVYpxzPU7LfvexCErZnB5XNNvl8";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function register() {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
 
-      const res = await fetch(REGISTER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+      // Fake-E-Mail aus Username erstellen
+      const email = username + "@example.com";
+
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: { data: { username: username } }
       });
-      const data = await res.json();
-      document.getElementById("message").textContent = data.error || "Erfolgreich registriert!";
+
+      document.getElementById("status").innerText = error ? error.message : "Registrierung erfolgreich!";
     }
 
     async function login() {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
 
-      const res = await fetch(LOGIN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+      const email = username + "@example.com";
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
       });
-      const data = await res.json();
-      if (data.error) {
-        document.getElementById("message").textContent = data.error;
-      } else {
-        document.getElementById("message").style.color = "green";
-        document.getElementById("message").textContent = "Login erfolgreich! Willkommen, " + data.user.username;
-      }
+
+      document.getElementById("status").innerText = error ? error.message : "Login erfolgreich!";
     }
+
+    document.getElementById("registerBtn").addEventListener("click", register);
+    document.getElementById("loginBtn").addEventListener("click", login);
   </script>
 </body>
 </html>
