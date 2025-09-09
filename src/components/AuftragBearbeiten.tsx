@@ -379,21 +379,21 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
                       onClick={() => addZeit(0.25)}
                       className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                     >
-                      +0,25h
+                      +15 min
                     </button>
                     <button
                       type="button"
                       onClick={() => addZeit(0.5)}
                       className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                     >
-                      +0,5h
+                      +30 min
                     </button>
                     <button
                       type="button"
                       onClick={() => addZeit(1)}
                       className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                     >
-                      +1h
+                      +60 min
                     </button>
                   </div>
                 </div>
