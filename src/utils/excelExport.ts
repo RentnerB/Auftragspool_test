@@ -13,8 +13,8 @@ export const exportToExcel = (auftraege: Auftrag[], filename: string = 'auftraeg
     'Ausführender': auftrag.ausfuehrender,
     'Status': auftrag.status.replace('_', ' ').toUpperCase(),
     'Priorität': auftrag.prioritaet.charAt(0).toUpperCase() + auftrag.prioritaet.slice(1),
-    'Geschätzte Dauer (Std:Min)': auftrag.geschaetzteDauer > 0 ? formatZeitForExcel(auftrag.geschaetzteDauer) : '-',
-    'Gesamtzeit (Std:Min)': formatZeitForExcel(auftrag.gesamtzeit),
+    'Geschätzte Dauer (Std)': auftrag.geschaetzteDauer > 0 ? auftrag.geschaetzteDauer.toString().replace('.', ',') + 'h' : '-',
+    'Gesamtzeit (Std)': auftrag.gesamtzeit > 0 ? auftrag.gesamtzeit.toString().replace('.', ',') + 'h' : '-',
     'Anzahl Ausführungen': auftrag.ausfuehrungen.length,
     'Letzte Bearbeitung': auftrag.ausfuehrungen.length > 0 
       ? new Date(auftrag.ausfuehrungen[auftrag.ausfuehrungen.length - 1].datum).toLocaleDateString('de-DE')
@@ -29,14 +29,14 @@ export const exportToExcel = (auftraege: Auftrag[], filename: string = 'auftraeg
     { wch: 15 }, // Auftragsnummer
     { wch: 12 }, // Erteilt am
     { wch: 12 }, // Erledigen bis
-    { wch: 25 }, // Anlage
+    { wch: 25 }, // Kategorie
     { wch: 40 }, // Meldetext
     { wch: 18 }, // Verantwortlicher
     { wch: 18 }, // Ausführender
     { wch: 15 }, // Status
     { wch: 10 }, // Priorität
-    { wch: 18 }, // Geschätzte Dauer (Std:Min)
-    { wch: 15 }, // Gesamtzeit (Std:Min)
+    { wch: 15 }, // Geschätzte Dauer (Std)
+    { wch: 12 }, // Gesamtzeit (Std)
     { wch: 12 }, // Anzahl Ausführungen
     { wch: 15 }  // Letzte Bearbeitung
   ];
@@ -49,10 +49,4 @@ export const exportToExcel = (auftraege: Auftrag[], filename: string = 'auftraeg
   // Datei herunterladen
   const timestamp = new Date().toISOString().split('T')[0];
   XLSX.writeFile(workbook, `${filename}_${timestamp}.xlsx`);
-};
-
-const formatZeitForExcel = (minuten: number): string => {
-  const stunden = Math.floor(minuten / 60);
-  const mins = minuten % 60;
-  return `${stunden.toString().replace('.', ',')}:${mins.toString().padStart(2, '0')}`;
 };

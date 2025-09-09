@@ -296,7 +296,7 @@ function App() {
     const neuerAuftrag: Auftrag = {
       id: Date.now().toString(),
       auftragsnummer: generateAuftragsnummer(),
-      erteiltAm: new Date().toISOString().split('T')[0],
+          zeitaufwand: 0.5,
       erledigenBis: auftragData.erledigenBis || '',
       kategorie: auftragData.kategorie || '',
       unterkategorie: auftragData.unterkategorie,
@@ -304,11 +304,11 @@ function App() {
       verantwortlicher: auftragData.verantwortlicher || '',
       ausfuehrender: auftragData.ausfuehrender || '',
       status: 'offen',
-      prioritaet: auftragData.prioritaet || 'normal',
+          zeitaufwand: 3,
       abteilung: auftragData.abteilung || '',
       geschaetzteDauer: auftragData.geschaetzteDauer || 0,
       ausfuehrungen: [],
-      gesamtzeit: 0,
+      gesamtzeit: 3.5,
       dateien: []
     };
 
@@ -474,11 +474,7 @@ function App() {
   };
 
   const formatZeit = (minuten: number) => {
-    const stunden = Math.floor(minuten / 60);
-    const mins = minuten % 60;
-    const stundenStr = stunden > 0 ? stunden.toString().replace('.', ',') : '';
-    const minsStr = mins.toString().replace('.', ',');
-    return stunden > 0 ? `${stundenStr}h ${minsStr}min` : `${minsStr}min`;
+    return `${minuten.toString().replace('.', ',')}h`;
   };
 
   const renderDashboard = () => (
@@ -553,16 +549,16 @@ function App() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs px-2 py-1 rounded ${getAbteilungColor(auftrag.abteilung)}`}>
-                    {auftrag.abteilung}
+                    {auftrag.gesamtzeit > 0 ? `${auftrag.gesamtzeit.toString().replace('.', ',')}h` : '-'}
                   </span>
                   {auftrag.geschaetzteDauer > 0 && (
                     <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                      Geschätzt: {auftrag.geschaetzteDauer}h
+                      Geschätzt: {auftrag.geschaetzteDauer.toString().replace('.', ',')}h
                     </span>
                   )}
                   {auftrag.gesamtzeit > 0 && (
                     <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                      {formatZeit(auftrag.gesamtzeit)}
+                      {auftrag.gesamtzeit.toString().replace('.', ',')}h
                     </span>
                   )}
                   <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(auftrag.status)}`}>

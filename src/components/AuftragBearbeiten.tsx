@@ -16,8 +16,8 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
   const [zeitaufwand, setZeitaufwand] = useState(0);
   const [updatedAuftrag, setUpdatedAuftrag] = useState<Auftrag>(auftrag);
 
-  const addZeit = (minuten: number) => {
-    setZeitaufwand(prev => prev + minuten);
+  const addZeit = (stunden: number) => {
+    setZeitaufwand(prev => prev + stunden);
   };
 
   const addAusfuehrung = () => {
@@ -104,11 +104,7 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
   };
 
   const formatZeit = (minuten: number) => {
-    const stunden = Math.floor(minuten / 60);
-    const mins = minuten % 60;
-    const stundenStr = stunden > 0 ? stunden.toString().replace('.', ',') : '';
-    const minsStr = mins.toString().replace('.', ',');
-    return stunden > 0 ? `${stundenStr}h ${minsStr}min` : `${minsStr}min`;
+    return `${minuten.toString().replace('.', ',')}h`;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -187,7 +183,7 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
               </div>
               <div>
                 <span className="text-gray-600">Gesamtzeit:</span>
-                <span className="ml-2 font-medium text-blue-600">{formatZeit(updatedAuftrag.gesamtzeit)}</span>
+                <span className="ml-2 font-medium text-blue-600">{updatedAuftrag.gesamtzeit.toString().replace('.', ',')}h</span>
               </div>
             </div>
             <div className="mt-3">
@@ -366,35 +362,35 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Zeitaufwand (Minuten)
+                  Zeitaufwand (Stunden)
                 </label>
                 <div className="flex items-center gap-3">
                   <input
-                    type="number"
+                    type="text"
                     value={zeitaufwand}
-                    onChange={(e) => setZeitaufwand(Math.max(0, parseInt(e.target.value) || 0))}
+                    onChange={(e) => setZeitaufwand(Math.max(0, parseFloat(e.target.value.replace(',', '.')) || 0))}
                     className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    min="0"
+                    placeholder="z.B. 1,5"
                   />
                   <span className="text-gray-500">oder</span>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => addZeit(15)}
+                      onClick={() => addZeit(0.25)}
                       className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                     >
-                      +15min
+                      +0,25h
                     </button>
                     <button
                       type="button"
-                      onClick={() => addZeit(30)}
+                      onClick={() => addZeit(0.5)}
                       className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                     >
-                      +30min
+                      +0,5h
                     </button>
                     <button
                       type="button"
-                      onClick={() => addZeit(60)}
+                      onClick={() => addZeit(1)}
                       className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                     >
                       +1h
@@ -403,7 +399,7 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
                 </div>
                 {zeitaufwand > 0 && (
                   <p className="text-sm text-gray-600 mt-1">
-                    Entspricht: {formatZeit(zeitaufwand)}
+                    Entspricht: {zeitaufwand.toString().replace('.', ',')}h
                   </p>
                 )}
               </div>
@@ -445,7 +441,7 @@ export function AuftragBearbeiten({ auftrag, onSave, onClose, currentUser, isAdm
                         </div>
                       </div>
                       <span className="text-sm font-medium text-blue-600">
-                        {formatZeit(ausfuehrung.zeitaufwand)}
+                        {ausfuehrung.zeitaufwand.toString().replace('.', ',')}h
                       </span>
                     </div>
                     <p className="text-gray-900">{ausfuehrung.beschreibung}</p>

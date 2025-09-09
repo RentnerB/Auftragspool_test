@@ -5,12 +5,8 @@ export const generatePDF = (auftrag: Auftrag) => {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
 
-  const formatZeit = (minuten: number) => {
-    const stunden = Math.floor(minuten / 60);
-    const mins = minuten % 60;
-    const stundenStr = stunden > 0 ? stunden.toString().replace('.', ',') : '';
-    const minsStr = mins.toString().replace('.', ',');
-    return stunden > 0 ? `${stundenStr}h ${minsStr}min` : `${minsStr}min`;
+  const formatZeit = (stunden: number) => {
+    return `${stunden.toString().replace('.', ',')}h`;
   };
 
   const getStatusText = (status: string) => {
@@ -246,7 +242,7 @@ export const generatePDF = (auftrag: Auftrag) => {
           </div>
           <div class="info-row">
             <span class="info-label">Gesamtzeit:</span>
-            <span class="info-value">${auftrag.gesamtzeit > 0 ? formatZeit(auftrag.gesamtzeit) : 'Noch keine Zeit erfasst'}</span>
+            <span class="info-value">${auftrag.gesamtzeit > 0 ? `${auftrag.gesamtzeit.toString().replace('.', ',')}h` : 'Noch keine Zeit erfasst'}</span>
           </div>
         </div>
       </div>
@@ -286,7 +282,7 @@ export const generatePDF = (auftrag: Auftrag) => {
                   <span>🕐 ${ausfuehrung.uhrzeit}</span>
                   <span>👤 ${ausfuehrung.bearbeiter}</span>
                 </div>
-                <span class="zeit-badge">${formatZeit(ausfuehrung.zeitaufwand)}</span>
+                <span class="zeit-badge">${ausfuehrung.zeitaufwand.toString().replace('.', ',')}h</span>
               </div>
               <p>${ausfuehrung.beschreibung}</p>
             </div>

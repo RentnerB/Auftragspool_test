@@ -12,7 +12,7 @@ export interface Auftrag {
   prioritaet: 'niedrig' | 'normal' | 'hoch' | 'kritisch';
   abteilung: string;
   ausfuehrungen: Ausfuehrung[];
-  gesamtzeit: number; // in Minuten
+  gesamtzeit: number; // in Stunden
   geschaetzteDauer: number; // in Stunden
   dateien: AuftragDatei[];
 }
@@ -22,7 +22,7 @@ export interface Ausfuehrung {
   datum: string;
   uhrzeit: string;
   beschreibung: string;
-  zeitaufwand: number; // in Minuten
+  zeitaufwand: number; // in Stunden
   bearbeiter: string;
 }
 
